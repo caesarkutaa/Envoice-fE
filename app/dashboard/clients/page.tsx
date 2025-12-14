@@ -5,7 +5,8 @@ import { Pencil, Trash2, Plus, Users, Mail, Phone, MapPin, FileText, ArrowLeft, 
 import { useAuth } from "../../context/AuthContext";
 import { useRouter } from "next/navigation";
 
-const base_url = "http://localhost:4567";
+
+const base_url = process.env.NEXT_PUBLIC_API_URL
 
 interface Client {
   id: string;

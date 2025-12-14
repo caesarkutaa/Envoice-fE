@@ -32,6 +32,7 @@ export default function ProfilePage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [isUsernameFocused, setIsUsernameFocused] = useState(false);
   
   const [form, setForm] = useState({
     username: "",
@@ -40,7 +41,7 @@ export default function ProfilePage() {
     mobile: "",
     gender: "",
     country: "",
-    imageFile: null as File | null,
+    imageUrl: null as File | null,
   });
 
   useEffect(() => {
@@ -121,7 +122,7 @@ export default function ProfilePage() {
         mobile: userData.mobile || "",
         gender: userData.gender || "",
         country: userData.country || "",
-        imageFile: null,
+        imageUrl: null,
       });
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -133,7 +134,7 @@ export default function ProfilePage() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setForm({ ...form, imageFile: file });
+      setForm({ ...form, imageUrl: file });
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
@@ -149,12 +150,10 @@ export default function ProfilePage() {
 
     try {
       // Try different endpoint patterns your backend might use
-      const endpoints = [
-        `${base_url}/users/profile/update`,
-        `${base_url}/users/me/update`,
-        `${base_url}/users/${user?._id}`,
-        `${base_url}/users/update`,
-      ];
+      const endpoints = [ `${base_url}/users/me/update`];
+      
+    
+   
 
       let success = false;
       let lastError = null;
@@ -188,13 +187,13 @@ export default function ProfilePage() {
             success = true;
             
             // Handle image upload separately if needed
-            if (form.imageFile) {
+            if (form.imageUrl) {
               const formData = new FormData();
-              formData.append("image", form.imageFile);
+              formData.append("image", form.imageUrl);
               
-              const imageEndpoint = `${base_url}/users/upload-image`;
+              const imageEndpoint = `${base_url}/users/me/update`;
               await fetch(imageEndpoint, {
-                method: "POST",
+                method: "PUT",
                 headers: {
                   Authorization: `Bearer ${accessToken}`,
                 },
@@ -235,7 +234,7 @@ export default function ProfilePage() {
         <div className="text-center">
           <div className="w-16 h-16 sm:w-20 sm:h-20 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4 sm:mb-6"></div>
           <p className="text-lg sm:text-xl text-gray-700 font-semibold">
-            {authLoading ? 'Restoring session...' : 'Loading profile...'}
+            {authLoading ? 'Loading profile...' : 'Loading profile...'}
           </p>
         </div>
       </div>
@@ -434,21 +433,34 @@ export default function ProfilePage() {
 
                     {/* Username */}
                     <div>
-                      <label className="block text-xs sm:text-sm font-bold text-gray-800 mb-1.5 sm:mb-2">Username</label>
+                      <label className="block text-xs sm:text-sm font-bold text-gray-800 mb-1.5 sm:mb-2">
+                        Username
+                      </label>
                       <div className="relative">
-                        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold">
+                        {/* Floating @ sign */}
+                        <span
+                          className={`absolute left-3 transition-all duration-200 pointer-events-none ${
+                            form.username || isUsernameFocused
+                              ? "top-0 -translate-y-1/2 text-xs bg-white px-1 text-purple-600 font-bold"
+                              : "top-1/2 -translate-y-1/2 text-gray-500 font-semibold text-base"
+                          }`}
+                        >
                           @
-                        </div>
+                        </span>
+                        
                         <input
                           type="text"
                           value={form.username}
                           onChange={(e) => setForm({ ...form, username: e.target.value })}
-                          placeholder="username"
-                          className="w-full border-2 border-gray-300 bg-white rounded-lg p-2.5 sm:p-3 pl-8 focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-200 outline-none text-gray-900 font-medium placeholder-gray-400 text-sm"
+                          onFocus={() => setIsUsernameFocused(true)}
+                          onBlur={() => setIsUsernameFocused(false)}
+                          placeholder={isUsernameFocused || form.username ? "" : "username"}
+                          className={`w-full border-2 border-gray-300 bg-white rounded-lg p-2.5 sm:p-3 transition-all duration-200 outline-none text-gray-900 font-medium placeholder-gray-400 text-sm ${
+                            form.username || isUsernameFocused ? "pl-3" : "pl-8"
+                          } focus:border-purple-500 focus:ring-4 focus:ring-purple-100`}
                         />
                       </div>
                     </div>
-
                     {/* Mobile */}
                     <div>
                       <label className="block text-xs sm:text-sm font-bold text-gray-800 mb-1.5 sm:mb-2">Mobile</label>
@@ -532,7 +544,7 @@ export default function ProfilePage() {
                           mobile: user?.mobile || "",
                           gender: user?.gender || "",
                           country: user?.country || "",
-                          imageFile: null,
+                          imageUrl: null,
                         });
                       }}
                       disabled={saving}

@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Trash2, FileText, Eye, CheckCircle, Clock, AlertCircle, Check } from "lucide-react";
+import { Trash2, FileText, Eye, CheckCircle, Clock, AlertCircle, Check, Download, Loader2 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useRouter } from "next/navigation";
 
-const base_url = "http://localhost:4567";
+const base_url = process.env.NEXT_PUBLIC_API_URL;
 
 interface InvoiceItem {
   description: string;
@@ -21,7 +21,7 @@ interface Invoice {
   clientId: string;
   issueDate: string;
   dueDate: string;
-  status?: string; // PAID, PENDING, OVERDUE
+  status?: string;
   notes?: string;
   discountType?: string;
   discountValue?: number;
@@ -43,10 +43,11 @@ export default function InvoiceListPage() {
   const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [invoiceToDelete, setInvoiceToDelete] = useState<string | null>(null);
-  const [markingPaid, setMarkingPaid] = useState<string | null>(null); // Track which invoice is being marked as paid
+  const [markingPaid, setMarkingPaid] = useState<string | null>(null);
+  const [downloadingPdf, setDownloadingPdf] = useState<string | null>(null); // ✅ Track PDF download
   const [expandedInvoice, setExpandedInvoice] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all"); // all, paid, pending, overdue
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -63,7 +64,7 @@ export default function InvoiceListPage() {
       });
       if (res.ok) {
         const data = await res.json();
-        // Sort by date - newest first
+        // ✅ Sort by date - NEWEST FIRST (most recent to oldest)
         const sortedData = data.sort((a: Invoice, b: Invoice) => 
           new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime()
         );
@@ -94,17 +95,14 @@ export default function InvoiceListPage() {
     setMarkingPaid(invoiceId);
     
     try {
-      // Try different endpoint patterns your backend might use
       const endpoints = [
-        { url: `${base_url}/invoices/update/${invoiceId}`, method: 'PATCH' }, // Your existing endpoint  
+        { url: `${base_url}/invoices/update/${invoiceId}`, method: 'PATCH' },
       ];
 
       let success = false;
 
       for (const endpoint of endpoints) {
         try {
-          console.log(`Trying to mark as paid: ${endpoint.method} ${endpoint.url}`);
-          
           const res = await fetch(endpoint.url, {
             method: endpoint.method,
             headers: {
@@ -114,13 +112,8 @@ export default function InvoiceListPage() {
             body: JSON.stringify({ status: "PAID" }),
           });
 
-          console.log(`Response status: ${res.status}`);
-
           if (res.ok) {
             success = true;
-            console.log(`Successfully marked invoice as paid using: ${endpoint.method} ${endpoint.url}`);
-            
-            // Update local state
             setInvoices(invoices.map(inv => 
               inv.id === invoiceId 
                 ? { ...inv, status: "PAID" }
@@ -134,14 +127,51 @@ export default function InvoiceListPage() {
       }
 
       if (!success) {
-        console.error("All endpoints failed. Please check your backend API.");
-        alert("Failed to mark invoice as paid. Please check the console for details.");
+        console.error("Failed to mark invoice as paid");
       }
     } catch (error) {
       console.error("Error marking invoice as paid:", error);
-      alert("Failed to mark invoice as paid");
     } finally {
       setMarkingPaid(null);
+    }
+  };
+
+  // ✅ DOWNLOAD PDF WITH BUSINESS COPY WATERMARK
+  const handleDownloadPdf = async (invoiceId: string) => {
+    setDownloadingPdf(invoiceId);
+    
+    try {
+      const res = await fetch(`${base_url}/invoices/${invoiceId}/pdf`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        
+        // Get invoice number for filename
+        const invoice = invoices.find(inv => inv.id === invoiceId);
+        const invoiceNumber = invoice?.id?.slice(0, 8) || 'invoice';
+        link.download = `BUSINESS-COPY-${invoiceNumber}.pdf`;
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      } else {
+        console.error('Failed to download PDF');
+        alert('Failed to download PDF. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      alert('Failed to download PDF. Please try again.');
+    } finally {
+      setDownloadingPdf(null);
     }
   };
 
@@ -149,13 +179,11 @@ export default function InvoiceListPage() {
     setExpandedInvoice(expandedInvoice === invoiceId ? null : invoiceId);
   };
 
-  // Determine invoice status
   const getInvoiceStatus = (invoice: Invoice) => {
     if (invoice.status) {
       const status = invoice.status.toUpperCase();
       if (status === 'PAID') return 'paid';
       if (status === 'PENDING') {
-        // Check if overdue
         const dueDate = new Date(invoice.dueDate);
         const now = new Date();
         if (dueDate < now) return 'overdue';
@@ -163,14 +191,12 @@ export default function InvoiceListPage() {
       }
     }
     
-    // Fallback: check due date for pending invoices
     const dueDate = new Date(invoice.dueDate);
     const now = new Date();
     if (dueDate < now) return 'overdue';
     return 'pending';
   };
 
-  // Filter invoices based on search query and status
   const filteredInvoices = invoices.filter((inv) => {
     const searchLower = searchQuery.toLowerCase();
     const matchesSearch = (
@@ -182,19 +208,16 @@ export default function InvoiceListPage() {
 
     if (!matchesSearch) return false;
 
-    // Filter by status
     if (statusFilter === "all") return true;
     const invoiceStatus = getInvoiceStatus(inv);
     return invoiceStatus === statusFilter;
   });
 
-  // Pagination logic
   const totalPages = Math.ceil(filteredInvoices.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const paginatedInvoices = filteredInvoices.slice(startIndex, endIndex);
 
-  // Reset to page 1 when search or filter changes
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, statusFilter]);
@@ -223,7 +246,7 @@ export default function InvoiceListPage() {
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                 Invoices
               </h1>
-              <p className="text-gray-600 text-sm mt-1">{filteredInvoices.length} total invoices</p>
+              <p className="text-gray-600 text-sm mt-1">{filteredInvoices.length} total invoices • Newest first</p>
             </div>
           </div>
         </div>
@@ -395,7 +418,24 @@ export default function InvoiceListPage() {
                         )}
                       </div>
                       <div className="flex gap-2 flex-wrap">
-                        {/* Mark as Paid Button - Only show for pending/overdue */}
+                        {/* ✅ DOWNLOAD PDF BUTTON */}
+                        <button
+                          onClick={() => handleDownloadPdf(inv.id)}
+                          disabled={downloadingPdf === inv.id}
+                          className="p-2 sm:p-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg hover:from-purple-600 hover:to-indigo-700 transform transition-all duration-200 hover:scale-110 shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 relative group"
+                          title="Download PDF (Business Copy)"
+                        >
+                          {downloadingPdf === inv.id ? (
+                            <Loader2 size={16} className="animate-spin" />
+                          ) : (
+                            <Download size={16} />
+                          )}
+                          <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                            Download PDF
+                          </span>
+                        </button>
+
+                        {/* Mark as Paid Button */}
                         {status !== 'paid' && (
                           <button
                             onClick={() => handleMarkAsPaid(inv.id)}
@@ -404,7 +444,7 @@ export default function InvoiceListPage() {
                             title="Mark as Paid"
                           >
                             {markingPaid === inv.id ? (
-                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                              <Loader2 size={16} className="animate-spin" />
                             ) : (
                               <Check size={16} />
                             )}
@@ -416,19 +456,27 @@ export default function InvoiceListPage() {
                         
                         <button
                           onClick={() => toggleExpandInvoice(inv.id)}
-                          className="p-2 sm:p-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transform transition-all duration-200 hover:scale-110 shadow-md"
+                          className="p-2 sm:p-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transform transition-all duration-200 hover:scale-110 shadow-md relative group"
                           title="View Details"
                         >
                           <Eye size={16} />
+                          <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                            View Details
+                          </span>
                         </button>
+                        
                         <button
                           onClick={() => {
                             setInvoiceToDelete(inv.id);
                             setShowDeleteModal(true);
                           }}
-                          className="p-2 sm:p-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transform transition-all duration-200 hover:scale-110 shadow-md"
+                          className="p-2 sm:p-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transform transition-all duration-200 hover:scale-110 shadow-md relative group"
+                          title="Delete Invoice"
                         >
                           <Trash2 size={16} />
+                          <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                            Delete
+                          </span>
                         </button>
                       </div>
                     </div>
@@ -553,7 +601,6 @@ export default function InvoiceListPage() {
               
               <div className="flex items-center gap-1">
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-                  // Show first page, last page, current page, and pages around current
                   if (
                     page === 1 ||
                     page === totalPages ||

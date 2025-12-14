@@ -126,7 +126,7 @@ export default function SignupPage() {
                 <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
                   Create Account
                 </h2>
-                <p className="text-gray-600">Start your 14-day free trial today</p>
+                <p className="text-gray-600">Start your free trial today</p>
               </div>
 
               {/* Error Message */}
