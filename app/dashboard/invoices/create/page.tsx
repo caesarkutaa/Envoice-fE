@@ -418,7 +418,7 @@ function CreateInvoiceForm() {
                             Price
                           </label>
                           <input
-                            type="number"
+                            type="text"
                             placeholder="Price"
                             value={item.unitPrice}
                             onChange={(e) =>
@@ -489,7 +489,7 @@ function CreateInvoiceForm() {
                           Unit Price
                         </label>
                         <input
-                          type="number"
+                          type="text"
                           placeholder="Price"
                           value={item.unitPrice}
                           onChange={(e) =>

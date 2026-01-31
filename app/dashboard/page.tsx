@@ -439,22 +439,29 @@ export default function ProfilePage() {
                       </div>
                     </div>
 
-                    {/* Username */}
-                    <div>
-                      <label className="block text-xs sm:text-sm font-bold text-gray-800 mb-1.5 sm:mb-2">Username</label>
-                      <div className="relative">
-                        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold">
-                          @
-                        </div>
-                        <input
-                          type="text"
-                          value={form.username}
-                          onChange={(e) => setForm({ ...form, username: e.target.value })}
-                          placeholder="username"
-                          className="w-full border-2 border-gray-300 bg-white rounded-lg p-2.5 sm:p-3 pl-8 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none text-gray-900 font-medium placeholder-gray-400 text-sm"
-                        />
-                      </div>
+                {/* Username */}
+                <div>
+                    <label className="block text-xs sm:text-sm font-bold text-gray-800 mb-1.5 sm:mb-2">
+                      Username
+                    </label>
+                    <div className="relative flex items-center">
+                      {/* Fixed @ Symbol - Positioned absolutely */}
+                      <span className="absolute left-4 text-gray-400 font-bold pointer-events-none select-none text-base">
+                        
+                      </span>
+                      
+                      <input
+                        type="text"
+                        value={form.username}
+                        onChange={(e) => setForm({ ...form, username: e.target.value })}
+                        placeholder="username"
+                        /** * pl-10 (40px) provides plenty of room so the cursor 
+                         * starts clearly to the right of the @ symbol.
+                         */
+                        className="w-full border-2 border-gray-300 bg-white rounded-lg p-2.5 sm:p-3 pl-10 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none text-gray-900 font-medium placeholder-gray-400 text-sm"
+                      />
                     </div>
+                  </div>
 
                     {/* Mobile */}
                     <div>
