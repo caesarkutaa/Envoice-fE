@@ -88,7 +88,7 @@ function EmailConfirmationContent() {
         {/* Back Button */}
         <button
           onClick={() => router.push("/login")}
-          className="inline-flex items-center gap-1.5 sm:gap-2 text-purple-600 hover:text-purple-700 font-semibold mb-4 sm:mb-6 transition-all hover:gap-2 sm:hover:gap-3 text-sm sm:text-base group"
+          className="inline-flex items-center gap-1.5 sm:gap-2 text-blue-900 hover:text-blue-500 font-semibold mb-4 sm:mb-6 transition-all hover:gap-2 sm:hover:gap-3 text-sm sm:text-base group"
         >
           <ArrowLeft size={18} className="sm:w-5 sm:h-5 transition-transform group-hover:-translate-x-1" />
           <span>Back to Login</span>
@@ -98,7 +98,7 @@ function EmailConfirmationContent() {
         <div className="bg-white/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-2xl border border-white/20 overflow-hidden animate-scale-in">
           
           {/* Header with Gradient */}
-          <div className="bg-gradient-to-r from-purple-600 via-violet-600 to-fuchsia-600 p-6 sm:p-8 md:p-10 text-center relative overflow-hidden">
+          <div className="bg-blue-900 p-6 sm:p-8 md:p-10 text-center relative overflow-hidden">
             {/* Decorative Elements */}
             <div className="absolute top-0 right-0 w-32 h-32 sm:w-40 sm:h-40 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
             <div className="absolute bottom-0 left-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -ml-12 -mb-12 blur-2xl"></div>
@@ -134,7 +134,7 @@ function EmailConfirmationContent() {
               </p>
               <div className="flex items-center gap-2 sm:gap-3">
                 <Inbox className="text-purple-600 w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                <p className="text-base sm:text-lg md:text-xl font-bold text-purple-600 break-all">
+                <p className="text-base sm:text-lg md:text-xl font-bold text-blue-900 break-all">
                   {email}
                 </p>
               </div>
@@ -148,15 +148,15 @@ function EmailConfirmationContent() {
               </h3>
               <ol className="space-y-2 sm:space-y-3 text-sm sm:text-base text-gray-700">
                 <li className="flex items-start gap-2 sm:gap-3">
-                  <span className="bg-purple-600 text-white rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center text-xs sm:text-sm font-bold flex-shrink-0 mt-0.5">1</span>
+                  <span className="bg-blue-900 text-white rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center text-xs sm:text-sm font-bold flex-shrink-0 mt-0.5">1</span>
                   <span>Open your email inbox</span>
                 </li>
                 <li className="flex items-start gap-2 sm:gap-3">
-                  <span className="bg-purple-600 text-white rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center text-xs sm:text-sm font-bold flex-shrink-0 mt-0.5">2</span>
+                  <span className="bg-blue-900 text-white rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center text-xs sm:text-sm font-bold flex-shrink-0 mt-0.5">2</span>
                   <span>Click the verification link</span>
                 </li>
                 <li className="flex items-start gap-2 sm:gap-3">
-                  <span className="bg-purple-600 text-white rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center text-xs sm:text-sm font-bold flex-shrink-0 mt-0.5">3</span>
+                  <span className="bg-blue-900 text-white rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center text-xs sm:text-sm font-bold flex-shrink-0 mt-0.5">3</span>
                   <span>Your account will be activated</span>
                 </li>
               </ol>
@@ -220,7 +220,7 @@ function EmailConfirmationContent() {
               <button
                 onClick={handleResendEmail}
                 disabled={resending || !canResend}
-                className="w-full bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white py-3 sm:py-3.5 md:py-4 px-4 sm:px-6 rounded-xl sm:rounded-2xl text-sm sm:text-base md:text-lg font-bold hover:from-purple-700 hover:to-fuchsia-700 transform transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg hover:shadow-xl flex items-center justify-center gap-2 sm:gap-3"
+                className="w-full bg-blue-900 text-white py-3 sm:py-3.5 md:py-4 px-4 sm:px-6 rounded-xl sm:rounded-2xl text-sm sm:text-base md:text-lg font-bold hover:bg-blue-800 transform transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg hover:shadow-xl flex items-center justify-center gap-2 sm:gap-3"
               >
                 {resending ? (
                   <>

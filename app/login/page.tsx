@@ -131,10 +131,10 @@ export default function LoginPage() {
           <div className="animate-scale-in">
             {/* Mobile Logo */}
             <Link href="/" className="lg:hidden flex items-center gap-3 mb-6">
-              <div className="bg-blue-600 p-2.5 rounded-xl shadow-lg">
+              <div className="bg-blue-900 p-2.5 rounded-xl shadow-lg">
                 <FileText className="text-white" size={24} />
               </div>
-              <h1 className="text-2xl font-bold text-blue-600">Envoice</h1>
+              <h1 className="text-2xl font-bold text-blue-900">Envoice</h1>
             </Link>
 
             <div className="bg-white rounded-3xl shadow-2xl border border-gray-200 p-6 sm:p-8 lg:p-10">
