@@ -41,7 +41,6 @@ export default function SignupPage() {
   const router = useRouter();
 
   const onSubmit = async (data: SignupFormData) => {
-<<<<<<< HEAD
     setErrorMessage("");
     try {
       const res = await fetch(`${base_url}/auth/register`, {
@@ -55,13 +54,6 @@ export default function SignupPage() {
         setErrorMessage(errorData.message || "Registration failed");
         return;
       }
-=======
-    const res = await fetch(`${base_url}/auth/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
->>>>>>> 0793f6c46775366bd1d4095e639afd16a2d86bfc
 
       router.push(`/email-confirmation?email=${encodeURIComponent(data.email)}`);
     } catch (err) {
@@ -104,7 +96,6 @@ export default function SignupPage() {
 
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
                 {/* Username */}
-<<<<<<< HEAD
                 <div>
                   <input
                     {...register("username")}
@@ -142,38 +133,6 @@ export default function SignupPage() {
                     </button>
                   </div>
                   {errors.password && <p className="text-red-600 text-xs mt-1 ml-1">{errors.password.message}</p>}
-=======
-                <input
-                  {...register("username")}
-                  placeholder="Username"
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl 
-    text-gray-900 placeholder-gray-500
-    focus:border-blue-900 focus:ring-4 focus:ring-blue-100 outline-none"
-                />
-
-                {/* Email */}
-                <input
-                  {...register("email")}
-                  placeholder="Email"
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl text-gray-900 placeholder-gray-500 focus:border-blue-900 focus:ring-4 focus:ring-blue-100 outline-none"
-                />
-
-                {/* Password */}
-                <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    {...register("password")}
-                    placeholder="Password"
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-900 text-gray-900 placeholder-gray-500 focus:ring-4 focus:ring-blue-100 outline-none"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
->>>>>>> 0793f6c46775366bd1d4095e639afd16a2d86bfc
                 </div>
 
                 {/* Submit */}
@@ -233,7 +192,6 @@ export default function SignupPage() {
 
             <div className="bg-blue-900 rounded-2xl p-6 text-white shadow-lg">
               <h3 className="text-xl font-bold mb-4">What's Included</h3>
-<<<<<<< HEAD
               <div className="space-y-3">
                 {["Unlimited invoices", "PDF exports", "Payment tracking"].map(
                   (item) => (
@@ -244,16 +202,6 @@ export default function SignupPage() {
                   )
                 )}
               </div>
-=======
-              {["Unlimited invoices", "PDF exports", "Payment tracking"].map(
-                (item) => (
-                  <div key={item} className="flex gap-3 items-center">
-                    <Check size={16} />
-                    {item}
-                  </div>
-                ),
-              )}
->>>>>>> 0793f6c46775366bd1d4095e639afd16a2d86bfc
             </div>
           </div>
         </div>
