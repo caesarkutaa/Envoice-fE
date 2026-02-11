@@ -11,6 +11,7 @@ import {
   Check,
   Download,
   Loader2,
+  MessageCircle,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useRouter } from "next/navigation";
@@ -70,6 +71,8 @@ export default function InvoiceListPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [fetchingWhatsApp, setFetchingWhatsApp] = useState<string | null>(null);
+  const [whatsappUrls, setWhatsappUrls] = useState<Record<string, string>>({});
   const itemsPerPage = 10;
 
   useEffect(() => {
@@ -194,6 +197,48 @@ export default function InvoiceListPage() {
       alert("Failed to download PDF. Please try again.");
     } finally {
       setDownloadingPdf(null);
+    }
+  };
+
+  const handleSendWhatsApp = async (invoiceId: string) => {
+    setFetchingWhatsApp(invoiceId);
+
+    try {
+      const res = await fetch(`${base_url}/invoices/${invoiceId}/`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.whatsappUrl) {
+ setWhatsappUrls(prev => ({ ...prev, [invoiceId]: data.whatsappUrl }));
+          
+          // Open WhatsApp in new tab
+          const whatsappWindow = window.open(data.whatsappUrl, '_blank');
+          
+          // Focus the window if possible
+          if (whatsappWindow) {
+   whatsappWindow.focus();
+          }
+          
+          // Show success toast
+          alert('📱 WhatsApp opened!\n\nPlease send the message manually in WhatsApp.');
+        } else {
+          alert('⚠️ WhatsApp link not ready yet.\n\nThe invoice is still processing. Please try again in a few seconds.');
+        }
+      } else {
+        const errorData = await res.json();
+        const errorMsg = errorData.message ||'Failed to generate WhatsApp link';
+ alert(`❌ Error: ${errorMsg}\n\nCommon reasons:\n• Client phone number missing\n• Invoice still processing\n• Business profile not configured`);
+      }
+    } catch (error) {
+      console.error("Error fetching WhatsApp URL:", error);
+      alert("❌ Failed to connect to server.\n\nPlease check your internet connection and try again.");
+    } finally {
+      setFetchingWhatsApp(null);
     }
   };
 
@@ -464,6 +509,24 @@ export default function InvoiceListPage() {
                           </p>
                         )}
                       </div>
+
+                      {/* WhatsApp Button */}
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleSendWhatsApp(inv.id)}
+                          disabled={fetchingWhatsApp === inv.id}
+                          className="p-2 sm:p-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transform transition-all duration-200 hover:scale-110 shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 relative group"
+                          title="Send via WhatsApp"
+                        >
+                          {fetchingWhatsApp === inv.id ? (
+                            <Loader2 size={16} className="animate-spin" />
+                          ) : (
+                            <MessageCircle size={16} />
+                          )}
+                        </button>
+                      </div>
+                      
+                      
                       <div className="flex gap-2 flex-wrap">
                         {/* ✅ DOWNLOAD PDF BUTTON */}
                         <button

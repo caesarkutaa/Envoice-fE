@@ -9,8 +9,8 @@ import {
   Phone,
   Upload,
   X,
-  CheckCircle,
   Loader2,
+  Globe,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
@@ -21,8 +21,37 @@ interface BusinessProfile {
   location: string;
   contact: string;
   currency: string;
+  countryCode: string; // ✅ NEW: Add countryCode
   logo?: string;
 }
+
+// ✅ NEW: Country code options
+const COUNTRY_CODES = [
+  { label: "🇳🇬 Nigeria (+234)", value: "+234" },
+  { label: "🇺🇸 United States (+1)", value: "+1" },
+  { label: "🇬🇧 United Kingdom (+44)", value: "+44" },
+  { label: "🇨🇦 Canada (+1)", value: "+1" },
+  { label: "🇦🇺 Australia (+61)", value: "+61" },
+  { label: "🇿🇦 South Africa (+27)", value: "+27" },
+  { label: "🇰🇪 Kenya (+254)", value: "+254" },
+  { label: "🇬🇭 Ghana (+233)", value: "+233" },
+  { label: "🇮🇳 India (+91)", value: "+91" },
+  { label: "🇩🇪 Germany (+49)", value: "+49" },
+  { label: "🇫🇷 France (+33)", value: "+33" },
+  { label: "🇪🇸 Spain (+34)", value: "+34" },
+  { label: "🇮🇹 Italy (+39)", value: "+39" },
+  { label: "🇧🇷 Brazil (+55)", value: "+55" },
+  { label: "🇲🇽 Mexico (+52)", value: "+52" },
+  { label: "🇯🇵 Japan (+81)", value: "+81" },
+  { label: "🇨🇳 China (+86)", value: "+86" },
+  { label: "🇷🇺 Russia (+7)", value: "+7" },
+  { label: "🇸🇬 Singapore (+65)", value: "+65" },
+  { label: "🇦🇪 UAE (+971)", value: "+971" },
+  { label: "🇸🇦 Saudi Arabia (+966)", value: "+966" },
+  { label: "🇪🇬 Egypt (+20)", value: "+20" },
+  { label: "🇲🇦 Morocco (+212)", value: "+212" },
+  { label: "🇹🇷 Turkey (+90)", value: "+90" },
+];
 
 export default function BusinessProfilePage() {
   const { accessToken, clearAuth, isLoading: authLoading } = useAuth();
@@ -31,24 +60,22 @@ export default function BusinessProfilePage() {
   const [editing, setEditing] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
-
-  // ✅ NEW: Add submitting state for loading indicator
   const [submitting, setSubmitting] = useState(false);
 
+  // ✅ UPDATED: Add countryCode to form state
   const [form, setForm] = useState({
     name: "",
     location: "",
     contact: "",
     currency: "",
+    countryCode: "+234", // Default to Nigeria
     logo: null as File | null,
   });
 
   useEffect(() => {
-    // Wait for AuthContext to finish loading before fetching
     if (!authLoading && accessToken) {
       fetchProfile();
     } else if (!authLoading && !accessToken) {
-      // Auth finished loading but no token found
       console.log("No token after auth loading complete, redirecting to login");
       window.location.href = "/login";
     }
@@ -72,7 +99,19 @@ export default function BusinessProfilePage() {
       if (res.ok) {
         const data = await res.json();
         console.log("Fetched profile data:", data);
+        
+        // ✅ UPDATED: Set countryCode from API response
         setProfile(data);
+        if (data) {
+          setForm({
+            name: data.name || "",
+            location: data.location || "",
+            contact: data.contact || "",
+            currency: data.currency || "NGN",
+            countryCode: data.countryCode || "+234", // Default fallback
+            logo: null,
+          });
+        }
       } else {
         setProfile(null);
       }
@@ -87,7 +126,6 @@ export default function BusinessProfilePage() {
     const file = e.target.files?.[0];
     if (file) {
       setForm({ ...form, logo: file });
-      // Create preview
       const reader = new FileReader();
       reader.onloadend = () => {
         setLogoPreview(reader.result as string);
@@ -98,8 +136,6 @@ export default function BusinessProfilePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // ✅ NEW: Set submitting to true to show loading
     setSubmitting(true);
 
     const formData = new FormData();
@@ -107,6 +143,7 @@ export default function BusinessProfilePage() {
     formData.append("location", form.location);
     formData.append("contact", form.contact);
     formData.append("currency", form.currency);
+    formData.append("countryCode", form.countryCode); // ✅ NEW: Include countryCode
     if (form.logo) formData.append("file", form.logo);
 
     const url =
@@ -124,13 +161,9 @@ export default function BusinessProfilePage() {
       });
 
       if (res.ok) {
-        // ✅ NEW: Show success state briefly before reload
         await new Promise((resolve) => setTimeout(resolve, 500));
-
-        // ✅ NEW: Reload the page to show updated logo
         window.location.reload();
       } else {
-        // ✅ NEW: Handle error
         console.error("Failed to update profile");
         setSubmitting(false);
         alert("Failed to update profile. Please try again.");
@@ -162,7 +195,7 @@ export default function BusinessProfilePage() {
         <div className="text-center">
           <div className="w-20 h-20 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
           <p className="text-xl text-gray-700 font-semibold">
-            {authLoading ? "Loading profile..." : "Loading profile..."}
+            Loading profile...
           </p>
         </div>
       </div>
@@ -296,34 +329,82 @@ export default function BusinessProfilePage() {
                       setForm({ ...form, location: e.target.value })
                     }
                     disabled={submitting}
-                    placeholder="e.g., 123 Main St, New York, NY"
+                    placeholder="e.g., 123 Main St, Lagos, Nigeria"
                     className="w-full border-2 border-gray-300 bg-white rounded-lg p-3 pl-11 focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all duration-200 outline-none text-gray-900 font-medium placeholder-gray-400 text-sm sm:text-base shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     required
                   />
                 </div>
               </div>
 
+              {/* Country Code */}
+              <div>
+                <label className="block text-sm font-bold text-gray-800 mb-2">
+                  Country Code
+                </label>
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                    <Globe className="text-indigo-600" size={20} />
+                  </div>
+                  <select
+                    value={form.countryCode}
+                    onChange={(e) =>
+                      setForm({ ...form, countryCode: e.target.value })
+                    }
+                    disabled={submitting}
+                    required
+                    className="w-full border-2 border-gray-300 bg-white rounded-lg p-3 pl-11 pr-10 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-200 outline-none text-gray-900 font-medium text-sm sm:text-base shadow-sm disabled:opacity-50 disabled:cursor-not-allowed appearance-none"
+                  >
+                    {COUNTRY_CODES.map((country) => (
+                      <option key={country.value} value={country.value}>
+                        {country.label}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                    <svg
+                      className="w-5 h-5 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Select your country for WhatsApp integration
+                </p>
+              </div>
+
               {/* Contact */}
               <div>
                 <label className="block text-sm font-bold text-gray-800 mb-2">
-                  Contact
+                  Contact Number
                 </label>
                 <div className="relative">
                   <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
                     <Phone className="text-purple-600" size={20} />
                   </div>
                   <input
-                    type="text"
+                    type="tel"
                     value={form.contact}
                     onChange={(e) =>
                       setForm({ ...form, contact: e.target.value })
                     }
                     disabled={submitting}
-                    placeholder="e.g., +1 (555) 123-4567"
+                    placeholder="e.g., 8012345678 (without country code)"
                     className="w-full border-2 border-gray-300 bg-white rounded-lg p-3 pl-11 focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-200 outline-none text-gray-900 font-medium placeholder-gray-400 text-sm sm:text-base shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     required
                   />
                 </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Enter phone number without country code (e.g., 8012345678)
+                </p>
               </div>
 
               {/* Currency */}
@@ -347,6 +428,10 @@ export default function BusinessProfilePage() {
                     <option value="NGN">₦ Nigerian Naira (NGN)</option>
                     <option value="USD">$ US Dollar (USD)</option>
                     <option value="EUR">€ Euro (EUR)</option>
+                    <option value="GBP">£ British Pound (GBP)</option>
+                    <option value="CAD">C$ Canadian Dollar (CAD)</option>
+                    <option value="AUD">A$ Australian Dollar (AUD)</option>
+                    <option value="ZAR">R South African Rand (ZAR)</option>
                   </select>
                 </div>
               </div>
@@ -415,6 +500,7 @@ export default function BusinessProfilePage() {
                         location: profile.location || "",
                         contact: profile.contact || "",
                         currency: profile.currency || "NGN",
+                        countryCode: profile.countryCode || "+234",
                         logo: null,
                       });
                       setEditing(true);
@@ -451,7 +537,7 @@ export default function BusinessProfilePage() {
                 </div>
               </div>
 
-              {/* Contact */}
+              {/* Contact with Country Code */}
               <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-200">
                 <div className="bg-purple-100 p-3 rounded-lg">
                   <Phone className="text-purple-600" size={24} />
@@ -461,7 +547,39 @@ export default function BusinessProfilePage() {
                     Contact
                   </p>
                   <p className="text-gray-900 font-semibold text-base sm:text-lg">
-                    {profile.contact}
+                    {profile.countryCode} {profile.contact}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Country: {profile.countryCode}
+                  </p>
+                </div>
+              </div>
+
+              {/* Currency */}
+              <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+                <div className="bg-blue-100 p-3 rounded-lg">
+                  <svg
+                    className="text-blue-600"
+                    width="24"
+                    height="24"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs text-gray-500 font-semibold uppercase mb-1">
+                    Currency
+                  </p>
+                  <p className="text-gray-900 font-semibold text-base sm:text-lg">
+                    {profile.currency}
                   </p>
                 </div>
               </div>
@@ -533,7 +651,7 @@ export default function BusinessProfilePage() {
           </>
         )}
 
-        {/* ✅ NEW: Loading Overlay */}
+        {/* LOADING OVERLAY */}
         {submitting && (
           <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center">
             <div className="bg-white rounded-2xl shadow-2xl p-8 text-center max-w-md mx-4 animate-scale-in">
